@@ -18,21 +18,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Instalar Docker si no existe
             sudo apt-get update
             sudo apt-get install -y docker.io docker-compose-v2
-            sudo systemctl start docker
-            sudo systemctl enable docker
-
-            # 2. Limpiar despliegues anteriores para evitar conflictos
-            rm -rf ~/innovatech-frontend-deploy
-
-            # 3. Clonar el repositorio (usando el nombre del repo actual)
-            git clone https://github.com/${{ github.repository }} ~/innovatech-frontend-deploy
-
-            # 4. Entrar a la carpeta y levantar
-            cd ~/innovatech-frontend-deploy
             
-            # 5. Detener contenedores viejos si existen y levantar los nuevos
+            rm -rf ~/innovatech-frontend-deploy
+            git clone https://github.com/${{ github.repository }} ~/innovatech-frontend-deploy
+            
+            # Buscamos el archivo docker-compose.yml no importa en qué carpeta esté
+            # y ejecutamos el comando ahí mismo.
+            cd $(find ~/innovatech-frontend-deploy -name "docker-compose.yml" -printf '%h' -quit)
+            
             sudo docker compose down || true
             sudo docker compose up -d --build
