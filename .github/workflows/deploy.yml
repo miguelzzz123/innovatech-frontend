@@ -19,12 +19,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo apt-get update
-            sudo apt-get install -y docker.io docker-compose
-            sudo systemctl start docker
-            sudo systemctl enable docker
+            sudo apt-get install -y docker.io docker-compose-v2
+            # Clonar si no existe, si existe entrar
             if [ ! -d "DevOps-InnovaTech" ]; then
               git clone https://github.com/${{ github.repository }} DevOps-InnovaTech
             fi
-            cd DevOps-InnovaTech
+            # PASO CLAVE: Entrar a la carpeta y luego a frontend
+            cd DevOps-InnovaTech/frontend
             git pull origin deploy
+            # Ahora sí encontrará el docker-compose.yml
             sudo docker compose up -d --build
