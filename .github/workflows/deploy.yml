@@ -2,7 +2,7 @@ name: Deploy Frontend to EC2
 
 on:
   push:
-    branches: [ "deploy" ] 
+    branches: [ "deploy" ]
 
 jobs:
   deploy:
@@ -18,14 +18,21 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # 1. Instalar Docker si no existe
             sudo apt-get update
             sudo apt-get install -y docker.io docker-compose-v2
-            # Clonar si no existe, si existe entrar
-            if [ ! -d "DevOps-InnovaTech" ]; then
-              git clone https://github.com/${{ github.repository }} DevOps-InnovaTech
-            fi
-            # PASO CLAVE: Entrar a la carpeta y luego a frontend
-            cd DevOps-InnovaTech/frontend
-            git pull origin deploy
-            # Ahora sí encontrará el docker-compose.yml
+            sudo systemctl start docker
+            sudo systemctl enable docker
+
+            # 2. Limpiar despliegues anteriores para evitar conflictos
+            rm -rf ~/innovatech-frontend-deploy
+
+            # 3. Clonar el repositorio (usando el nombre del repo actual)
+            git clone https://github.com/${{ github.repository }} ~/innovatech-frontend-deploy
+
+            # 4. Entrar a la carpeta y levantar
+            cd ~/innovatech-frontend-deploy
+            
+            # 5. Detener contenedores viejos si existen y levantar los nuevos
+            sudo docker compose down || true
             sudo docker compose up -d --build
