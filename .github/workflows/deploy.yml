@@ -1,0 +1,34 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches: [ "deploy" ] # Se activa solo al subir a la rama deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          # Usamos las llaves temporales de AWS Academy
+          key: ${{ secrets.AWS_SESSION_TOKEN }} 
+          # Nota: En AWS Academy, a veces es más estable usar un script de conexión. 
+          # Por ahora, usaremos este comando para preparar el servidor:
+          script: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io docker-compose
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            # Aquí clonaremos y levantaremos (simplificado para el encargo)
+            if [ ! -d "DevOps-InnovaTech" ]; then
+              git clone https://github.com/${{ github.repository }} DevOps-InnovaTech
+            fi
+            cd DevOps-InnovaTech
+            git pull origin deploy
+            sudo docker-compose up -d --build
